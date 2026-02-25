@@ -10,14 +10,15 @@ This package is standalone:
 ## Setup
 
 ```fish
-cd /Users/denshe/Work/oss/pi-fff
+git clone git@github.com:denisshepelin/pi-fff.git
+cd pi-fff
 npm install --include=optional
 ```
 
 ## Run with extension
 
 ```fish
-pi --extension /Users/denshe/Work/oss/pi-fff/src/index.ts
+pi --extension ./src/index.ts
 ```
 
 ## Notes
