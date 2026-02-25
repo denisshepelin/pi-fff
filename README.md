@@ -17,6 +17,12 @@ cd pi-fff
 npm install --include=optional
 ```
 
+Try it out before installing
+
+```bash
+pi -e git:github.com/denisshepelin/pi-fff
+```
+
 ## Run with extension
 
 ```bash
