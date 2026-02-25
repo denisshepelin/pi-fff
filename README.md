@@ -25,4 +25,3 @@ pi --extension ./src/index.ts
 
 - Uses `koffi` to bind to `libfff_c`.
 - Resolves native binary from matching `@ff-labs/fff-bun-<target>` package.
-- Includes `/fff-score-debug <query>` command to compare default picker vs fff ranking.
