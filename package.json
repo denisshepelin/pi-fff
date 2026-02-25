@@ -1,0 +1,33 @@
+{
+  "name": "pi-fff",
+  "private": true,
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck",
+    "install:optional": "npm install --include=optional"
+  },
+  "dependencies": {
+    "@mariozechner/pi-coding-agent": "^0.52.12",
+    "koffi": "^2.14.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.0.0"
+  },
+  "optionalDependencies": {
+    "@ff-labs/fff-bun-darwin-arm64": "latest",
+    "@ff-labs/fff-bun-darwin-x64": "latest",
+    "@ff-labs/fff-bun-linux-x64-gnu": "latest",
+    "@ff-labs/fff-bun-linux-arm64-gnu": "latest",
+    "@ff-labs/fff-bun-linux-x64-musl": "latest",
+    "@ff-labs/fff-bun-linux-arm64-musl": "latest",
+    "@ff-labs/fff-bun-win32-x64": "latest",
+    "@ff-labs/fff-bun-win32-arm64": "latest"
+  }
+}
