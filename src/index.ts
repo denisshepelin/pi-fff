@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { CombinedAutocompleteProvider, type AutocompleteItem } from "@mariozechner/pi-tui";
-import { FileFinder } from "./fff/index.js";
+import { FileFinder, closeLibrary } from "@ff-labs/fff-node";
 
 type FuzzyOptions = { isQuotedPrefix?: boolean };
 
@@ -11,16 +11,8 @@ type CombinedAutocompleteProviderPatched = {
   __fffPatched?: boolean;
 };
 
-type FffState = {
-  initialized: boolean;
-  basePath: string;
-};
-
-
-const fffState: FffState = {
-  initialized: false,
-  basePath: "",
-};
+let currentBasePath = "";
+let finder: FileFinder | null = null;
 
 function normalizePath(path: string): string {
   return path.replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/$/, "");
@@ -33,28 +25,32 @@ function buildCompletionValue(path: string, isQuotedPrefix: boolean): string {
   return `@"${path}"`;
 }
 
-function initializeFinder(basePath: string): boolean {
-  if (fffState.initialized) return fffState.basePath === basePath;
-
-  const init = FileFinder.init({ basePath });
-  if (!init.ok) return false;
-
-  const scan = FileFinder.waitForScan(500);
-  if (!scan.ok) {
-    FileFinder.destroy();
-    return false;
+function startFinder(basePath: string): void {
+  if (finder && currentBasePath === basePath) {
+    return;
   }
 
-  fffState.initialized = true;
-  fffState.basePath = basePath;
-  return true;
+  destroyFinder();
+
+  const created = FileFinder.create({ basePath, aiMode: true });
+  if (!created.ok) {
+    return;
+  }
+
+  finder = created.value;
+  currentBasePath = basePath;
+  void finder.waitForScan(10_000).catch(() => undefined);
 }
 
 function searchFff(query: string, isQuotedPrefix: boolean, limit: number): AutocompleteItem[] {
-  if (!fffState.initialized) return [];
+  if (!finder) {
+    return [];
+  }
 
-  const result = FileFinder.search(query, { pageSize: Math.max(limit, 20) });
-  if (!result.ok) return [];
+  const result = finder.fileSearch(query, { pageSize: Math.max(limit, 20) });
+  if (!result.ok) {
+    return [];
+  }
 
   return result.value.items.slice(0, limit).map((item) => {
     const path = normalizePath(item.relativePath || item.path);
@@ -84,20 +80,25 @@ function patchFilePicker() {
   prototype.__fffPatched = true;
 }
 
-function destroyFinder() {
-  if (!fffState.initialized) return;
+function destroyFinder(): void {
+  currentBasePath = "";
+  if (!finder) {
+    return;
+  }
 
-  FileFinder.destroy();
-  fffState.initialized = false;
-  fffState.basePath = "";
+  finder.destroy();
+  finder = null;
+  closeLibrary();
 }
 
 export default function (pi: ExtensionAPI) {
   patchFilePicker();
-  initializeFinder(process.cwd());
+
+  pi.on("session_start", (_event, ctx) => {
+    startFinder(ctx.cwd);
+  });
 
   pi.on("session_shutdown", () => {
     destroyFinder();
   });
-
 }
